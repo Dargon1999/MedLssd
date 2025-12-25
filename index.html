@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍇 SASPA NIGHT CITY </title>
+	<link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="cyber-container">
+
+    <!-- ГОСТЬ -->
+    <div id="guest-view" class="cyber-panel">
+        <h1 class="main-title">SASPA SYSTEM</h1>
+        <h2 class="subtitle">MEDICAL DATABASE</h2>
+
+        <p class="info-text">
+            Гостевой доступ активен
+            <br><br>
+            <button class="cyber-btn primary big" onclick="showAuth()">ВХОД / РЕГИСТРАЦИЯ</button>
+        </p>
+
+        <input class="cyber-input" id="med-search-guest" placeholder="ПОИСК ПО ИМЕНИ ИЛИ ПАСПОРТУ" onkeyup="searchMedCardsGuest()">
+
+        <div id="loading-guest" class="loading" style="display:none;">Загрузка...</div>
+
+        <table class="cyber-table" id="med-table-guest">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>ИМЯ</th>
+                    <th>ПАСПОРТ</th>
+                    <th>СРОК</th>
+                    <th>СТАТУС</th>
+                    <th>ФОТО</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="auth" class="cyber-panel" style="display:none;">
+        <h1 class="main-title">ACCESS TERMINAL</h1>
+
+        <div id="login-form">
+            <h3 class="form-title">ВХОД</h3>
+            <input id="login-email" class="cyber-input" placeholder="EMAIL" type="email">
+            <input id="login-password" type="password" class="cyber-input" placeholder="ПАРОЛЬ">
+            <button class="cyber-btn primary" onclick="login()">ВОЙТИ</button>
+            <p id="login-error" class="error-text"></p>
+        </div>
+
+        <div id="register-form" style="display:none;">
+            <h3 class="form-title">РЕГИСТРАЦИЯ</h3>
+            <input id="reg-name" class="cyber-input" placeholder="ИМЯ">
+            <input id="reg-email" class="cyber-input" placeholder="EMAIL" type="email">
+            <input id="reg-password" type="password" class="cyber-input" placeholder="ПАРОЛЬ (мин. 6 символов)">
+            <input id="reg-code" class="cyber-input" placeholder="КОД РОЛИ">
+            <button class="cyber-btn primary" onclick="register()">СОЗДАТЬ</button>
+            <p id="reg-error" class="error-text"></p>
+        </div>
+
+        <div class="auth-switch">
+            <button class="cyber-btn small" onclick="showLogin()">ВХОД</button>
+            <button class="cyber-btn small" onclick="showRegister()">РЕГИСТРАЦИЯ</button>
+            <button class="cyber-btn small" onclick="showGuestView()">← НАЗАД</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="cyber-panel" style="display:none;">
+        <h1 class="main-title">SASPA CORE</h1>
+        <p class="info-text">
+            ОПЕРАТОР: <span id="user-name"></span> | РОЛЬ: <span id="user-role"></span>
+            <button class="cyber-btn small danger" onclick="logout()">ВЫХОД</button>
+        </p>
+
+        <!-- Вкладки -->
+        <div class="tab-switch">
+            <button class="cyber-btn small" onclick="showTab('medcards-tab')">МЕДКАРТЫ</button>
+            <button id="history-btn" class="cyber-btn small" onclick="showTab('history-tab')">ИСТОРИЯ</button>
+            <button id="users-btn" class="cyber-btn small" onclick="showTab('users-tab')">ПОЛЬЗОВАТЕЛИ</button>
+            <button class="cyber-btn small" onclick="showTab('mp-tab')">МП</button>
+        </div>
+
+        <!-- Вкладка Медкарты -->
+        <div id="medcards-tab" class="tab-content">
+            <h3 class="form-title">СПИСОК МЕДКАРТ</h3>
+            <div class="controls">
+                <input class="cyber-input search-input" id="med-search-admin" placeholder="Поиск по имени, паспорту и т.д.">
+                <button class="cyber-btn small search-btn" onclick="searchMedCardsAdmin()">Найти</button>
+                <button class="cyber-btn small add-btn" onclick="toggleAddForm()">+ Добавить запись</button>
+                <button class="cyber-btn small sort-btn" id="sort-btn" onclick="toggleSortMedCards()">Сортировать по сроку ↓ (от актуального к неактуальному)</button>
+                <button class="cyber-btn small excel-btn" onclick="exportMedCardsToExcel()">↓ Скачать в Excel</button>
+            </div>
+
+            <!-- Форма добавления (скрытая по умолчанию) -->
+            <div id="add-med-form" class="form-grid" style="display:none;">
+                <input id="add-name" class="cyber-input" placeholder="ИМЯ">
+                <input id="add-passport" class="cyber-input" placeholder="ПАСПОРТ (только цифры)">
+                <input id="add-expiry" class="cyber-input" type="date" placeholder="ДАТА (гггг-мм-дд)" min="2000-01-01" max="2099-12-31">
+                <input id="add-photo" class="cyber-input" placeholder="URL ФОТО или '-' (опционально)">
+                <button class="cyber-btn primary" onclick="addMedCard()">ДОБАВИТЬ</button>
+            </div>
+            <p id="add-med-error" class="error-text"></p>
+
+            <table class="cyber-table" id="med-table-admin">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>ИМЯ</th>
+                        <th>ПАСПОРТ</th>
+                        <th>СРОК</th>
+                        <th>СТАТУС</th>
+                        <th>ФОТО</th>
+                        <th>ДЕЙСТВИЯ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Форма редактирования медкарты (модальное окно) -->
+        <div id="edit-med-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3 class="form-title">РЕДАКТИРОВАТЬ МЕДКАРТУ</h3>
+                <input id="edit-id" type="hidden">
+                <input id="edit-name" class="cyber-input" placeholder="ИМЯ">
+                <input id="edit-passport" class="cyber-input" placeholder="ПАСПОРТ (только цифры)">
+                <input id="edit-expiry" class="cyber-input" type="date" min="2000-01-01" max="2099-12-31">
+                <input id="edit-photo" class="cyber-input" placeholder="URL ФОТО или '-'">
+                <button class="cyber-btn primary" onclick="saveEditMedCard()">СОХРАНИТЬ</button>
+                <button class="cyber-btn danger" onclick="closeEditModal()">ЗАКРЫТЬ</button>
+                <p id="edit-med-error" class="error-text"></p>
+            </div>
+        </div>
+
+        <!-- Вкладка История -->
+        <div id="history-tab" class="tab-content" style="display:none;">
+            <h3 class="form-title">ИСТОРИЯ ДЕЙСТВИЙ</h3>
+            <div id="history-loading" class="loading">Загрузка...</div>
+            <table class="cyber-table" id="history-table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>ДАТА</th>
+                        <th>ПОЛЬЗОВАТЕЛЬ</th>
+                        <th>ДЕЙСТВИЕ</th>
+                        <th>ДЕТАЛИ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p id="history-empty" class="info-text" style="display:none;">Нет записей в истории</p>
+            <p id="history-no-access" class="error-text" style="display:none;">Доступ только для админа</p>
+        </div>
+
+        <!-- Вкладка Пользователи -->
+        <div id="users-tab" class="tab-content" style="display:none;">
+            <h3 class="form-title">ДОБАВИТЬ ПОЛЬЗОВАТЕЛЯ (ТОЛЬКО АДМИН)</h3>
+            <div class="form-grid">
+                <input id="new-user-name" class="cyber-input" placeholder="ИМЯ">
+                <input id="new-user-email" class="cyber-input" placeholder="EMAIL" type="email">
+                <input id="new-user-password" type="password" class="cyber-input" placeholder="ПАРОЛЬ (мин. 6 символов)">
+                <select id="new-user-role" class="cyber-input">
+                    <option value="checker">Checker</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button class="cyber-btn primary" onclick="addNewUser()">ДОБАВИТЬ</button>
+            </div>
+            <p id="add-user-error" class="error-text"></p>
+
+            <h3 class="form-title">СПИСОК ПОЛЬЗОВАТЕЛЕЙ</h3>
+            <div id="users-loading" class="loading">Загрузка...</div>
+            <table class="cyber-table" id="users-table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>ИМЯ</th>
+                        <th>EMAIL</th>
+                        <th>РОЛЬ</th>
+                        <th>ДЕЙСТВИЯ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p id="users-empty" class="info-text" style="display:none;">Нет пользователей</p>
+            <p id="users-no-access" class="error-text" style="display:none;">Доступ только для админа</p>
+        </div>
+
+        <!-- Форма редактирования пользователя (модальное окно) -->
+        <div id="edit-user-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3 class="form-title">РЕДАКТИРОВАТЬ ПОЛЬЗОВАТЕЛЯ</h3>
+                <input id="edit-user-uid" type="hidden">
+                <input id="edit-user-name" class="cyber-input" placeholder="ИМЯ">
+                <input id="edit-user-email" class="cyber-input" placeholder="EMAIL" type="email">
+                <input id="edit-user-password" type="password" class="cyber-input" placeholder="НОВЫЙ ПАРОЛЬ (опционально)">
+                <select id="edit-user-role" class="cyber-input">
+                    <option value="checker">Checker</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button class="cyber-btn primary" onclick="saveEditUser()">СОХРАНИТЬ</button>
+                <button class="cyber-btn danger" onclick="closeEditUserModal()">ЗАКРЫТЬ</button>
+                <p id="edit-user-error" class="error-text"></p>
+            </div>
+        </div>
+
+        <!-- Вкладка МП -->
+        <div id="mp-tab" class="tab-content" style="display:none;">
+            <div class="card">
+                <h1>МП → Discord</h1>
+                <div class="status">Статус: <span id="status" class="offline">Оффлайн</span></div>
+                <div>
+                    <button class="btn" onclick="checkNow()">Проверить сейчас</button>
+                    <button class="btn" onclick="resetDB()" style="background:#ff5555">Сбросить базу</button>
+                </div>
+                <div class="log" id="log">Инициализация...</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="script.js" defer></script>
+</body>
+</html>
